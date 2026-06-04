@@ -1,0 +1,30 @@
+# models/staging/vgsales/stg__vgsales.yml
+models:
+  - name: stg__vgsales
+    description: >
+      Staging du fichier CSV vgsales. 
+      Grain : une ligne par jeu par plateforme (game_platform_id).
+      Source : chargement dlt depuis le fichier CSV brut.
+
+    columns:
+      - name: game_platform_id
+        description: Clé de substitution — grain fin jeu + plateforme
+        tests:
+          - unique
+          - not_null
+
+      - name: game_id
+        description: Clé de substitution — grain global jeu seul
+
+      - name: game_name
+        tests:
+          - not_null
+
+      - name: release_year
+        description: Année de sortie. NULL si non renseignée dans la source.
+
+      - name: na_sales
+        description: Ventes Amérique du Nord en millions d'unités.
+
+      - name: esrb_rating
+        description: Classification ESRB (E, T, M, AO...). NULL si non renseignée.

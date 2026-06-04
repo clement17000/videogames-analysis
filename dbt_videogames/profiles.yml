@@ -1,0 +1,13 @@
+dbt_videogames:
+  outputs:
+    dev:
+      type: snowflake
+      account: "{{ env_var('SNOWFLAKE_ACCOUNT') }}"
+      user: "{{ env_var('SNOWFLAKE_TRANSFORMER_USER') }}"
+      password: "{{ env_var('SNOWFLAKE_TRANSFORMER_PASSWORD') }}"
+      role: TRANSFORMER_ROLE
+      database: DW_VIDEOGAMES
+      schema: DBT_VIDEOGAMES
+      threads: 1
+      warehouse: VIDEOGAMES_WH
+  target: dev

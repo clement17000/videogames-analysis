@@ -1,0 +1,23 @@
+# models/staging/sources.yml
+version: 2
+
+sources:
+  - name: rawg_source
+    description: "Données brutes ingérées par dlt depuis l'API REST RAWG (Video Games Database). Chargées en mode merge sur la clé id RAWG."
+    database: DW_VIDEOGAMES
+    schema: RAWG_API
+    tables:
+      - name: games
+        description: "Table principale : une ligne par jeu. Contient rating, metacritic, playtime, esrb_rating, genres et plateformes parentes."
+      - name: games__genres
+        description: "Table enfant dlt : relation jeu ↔ genres (dénormalisée depuis le champ JSON genres)."
+      - name: games__platforms
+        description: "Table enfant dlt : relation jeu ↔ plateformes parentes (dénormalisée depuis parent_platforms)."
+
+  - name: vgsales_source
+    description: "Données brutes ingérées par dlt depuis le CSV Kaggle VGSales 2022 (ibriiee). Chargées en mode replace — snapshot complet à chaque run."
+    database: DW_VIDEOGAMES
+    schema: VGSALES_CSV
+    tables:
+      - name: vgsales
+        description: "Table brute : une ligne par jeu par plateforme. Couvre les ventes mondiales jusqu'à 2016 (~16 k lignes)."
