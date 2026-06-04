@@ -1,0 +1,65 @@
+# ========================
+# Environnement & secrets
+# ========================
+.env
+.env.dev
+.env.prod
+.dlt/secrets.toml
+
+# ========================
+# Python
+# ========================
+__pycache__/
+*.py[cod]
+*.pyo
+.Python
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+env/
+
+# ========================
+# dbt
+# ========================
+dbt_videogames/target/
+dbt_videogames/dbt_packages/
+dbt_videogames/logs/
+dbt_videogames/.user.yml
+
+# ========================
+# Airflow
+# ========================
+logs/
+airflow.db
+
+# ========================
+# Docker
+# ========================
+*.log
+
+# ========================
+# IDE & OS
+# ========================
+.idea/
+.vscode/
+*.DS_Store
+Thumbs.db
+
+# ========================
+# Kaggle
+# ========================
+.kaggle/
+
+# ========================
+# uv
+# ========================
+.python-version
+
+# ========================
+# Cache outils
+# ========================
+.ruff_cache/
+.pytest_cache/
+__pycache__/

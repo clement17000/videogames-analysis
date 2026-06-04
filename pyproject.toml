@@ -1,0 +1,33 @@
+[project]
+name = "videogames_analysis"
+version = "0.1.0"
+description = "Pipeline ELT de bout en bout — analyse des données jeux vidéo (Snowflake + dbt + Airflow)"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "apache-airflow-providers-fab>=3.6.4",
+    "apache-airflow-providers-openlineage>=2.16.0",
+    "apache-airflow-task-sdk>=1.2.1",
+    "dbt-core==1.9.0",
+    "dbt-snowflake==1.9.0",
+    "dlt[parquet,snowflake]>=1.26.0",
+    "kagglehub[pandas-datasets]>=1.0.1",
+    "python-dotenv>=1.2.2",
+    "requests>=2.34.2",
+]
+
+[dependency-groups]
+dev = [
+    "pre-commit>=4.6.0",
+    "pytest>=9.0.3",
+    "ruff>=0.15.15",
+]
+
+[tool.ruff]
+line-length = 100
+exclude = ["dbt_videogames/target", "dbt_videogames/dbt_packages", ".venv"]
+
+[tool.ruff.lint]
+# E/W = pycodestyle, F = pyflakes, I = isort
+select = ["E", "W", "F", "I"]
+ignore = ["E501"]  # longueur de ligne gérée par le formateur
