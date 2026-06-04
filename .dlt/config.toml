@@ -1,0 +1,5 @@
+# .dlt/config.toml
+
+[runtime]
+log_level = "INFO"
+log_format = "{asctime} [{levelname}] {message}"
