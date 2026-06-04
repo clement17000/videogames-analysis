@@ -1,0 +1,21 @@
+version: 2
+
+exposures:
+
+  - name: metabase_videogames_dashboard
+    type: dashboard
+    maturity: medium
+    description: >
+      Dashboard Metabase de visualisation des données vidéoludiques.
+      Consomme les tables Gold pour analyser les tendances de genre,
+      la domination des plateformes, la corrélation scores/ventes
+      et les préférences régionales.
+    owner:
+      name: Clement17
+    depends_on:
+      - ref('fct_games_enriched')
+      - ref('fct_rawg_games')
+      - ref('fct_vgsales')
+      - ref('dim_genre')
+      - ref('dim_platform')
+      - ref('dim_publisher')

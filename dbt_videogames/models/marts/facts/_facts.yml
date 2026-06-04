@@ -1,0 +1,225 @@
+version: 2
+
+models:
+
+  - name: fct_rawg_games
+    description: >
+      Table de faits incrémentale des jeux issus de l'API RAWG.
+      Expose les métriques de notation (Metacritic, user_rating) et d'engagement (playtime)
+      prêtes à l'analyse et à la jointure avec fct_vgsales via le nom normalisé du jeu.
+      Grain : une ligne par jeu unique (game_id = surrogate key sur l'id RAWG).
+      Incrémental : seuls les jeux dont updated_at dépasse le max en table sont traités,
+      en cohérence avec le write_disposition="merge" du pipeline dlt RAWG.
+    columns:
+      - name: game_id
+        description: Clé surrogate générée sur l'identifiant RAWG du jeu.
+        tests:
+          - unique
+          - not_null
+
+      - name: game_name
+        description: Nom du jeu tel que retourné par l'API RAWG (nettoyé via trim).
+        tests:
+          - not_null
+
+      - name: game_slug
+        description: Identifiant URL-friendly du jeu dans RAWG (ex. grand-theft-auto-v).
+
+      - name: esrb_rating
+        description: Classification ESRB du jeu (Everyone, Teen, Mature…). NULL si non renseigné par RAWG.
+
+      - name: release_date
+        description: Date de sortie du jeu. Peut être NULL si absente dans l'API.
+
+      - name: release_year
+        description: Année de sortie extraite de release_date. NULL si release_date est NULL.
+
+      - name: metacritic_score
+        description: Score Metacritic (0–100). NULL si absent ou hors plage valide dans l'API.
+
+      - name: user_rating
+        description: Note moyenne des utilisateurs RAWG (0.0–5.0).
+
+      - name: max_user_rating
+        description: Note maximale possible sur l'échelle utilisateur RAWG (généralement 5).
+
+      - name: ratings_count
+        description: Nombre total d'évaluations utilisateurs sur RAWG.
+
+      - name: average_playtime_hours
+        description: Temps de jeu moyen déclaré en heures. NULL si > 8 760 h (outlier) ou non renseigné.
+
+      - name: updated_at
+        description: Timestamp de dernière mise à jour du jeu dans l'API RAWG. Sert de watermark pour la logique incrémentale.
+        tests:
+          - not_null
+
+  - name: fct_vgsales
+    description: >
+      Table de faits principale pour l'analyse des ventes de jeux vidéo.
+      Joint les clés dimensionnelles (plateforme, genre, éditeur) aux métriques
+      de ventes régionales et aux scores presse/joueurs issus du dataset Kaggle.
+      Grain : une ligne par (jeu, plateforme) — game_platform_id.
+    columns:
+      - name: game_platform_id
+        description: Clé surrogate sur (game_name, platform). Clé primaire de la table.
+        tests:
+          - unique
+          - not_null
+
+      - name: game_id
+        description: Clé surrogate sur game_name. Regroupe toutes les plateformes d'un même jeu.
+        tests:
+          - not_null
+
+      - name: platform_code
+        description: Code court de la plateforme (ex. PS3). FK vers dim_platform.platform_code.
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_platform')
+              field: platform_code
+
+      - name: platform_name
+        description: Nom complet de la plateforme, issu de dim_platform.
+
+      - name: manufacturer
+        description: Fabricant de la console, issu de dim_platform.
+
+      - name: genre_id
+        description: FK vers dim_genre.genre_id. NULL si le genre est absent dans vgsales.
+        tests:
+          - relationships:
+              to: ref('dim_genre')
+              field: genre_id
+
+      - name: publisher_id
+        description: FK vers dim_publisher.publisher_id. NULL si l'éditeur est absent dans vgsales.
+        tests:
+          - relationships:
+              to: ref('dim_publisher')
+              field: publisher_id
+
+      - name: game_name
+        description: Nom du jeu.
+        tests:
+          - not_null
+
+      - name: developer
+        description: Studio de développement du jeu. Peut être NULL si absent du CSV source.
+
+      - name: release_year
+        description: Année de sortie du jeu. Peut être NULL pour les entrées incomplètes du CSV.
+
+      - name: esrb_rating
+        description: Classification ESRB (E, T, M…). Peut être NULL.
+
+      - name: na_sales
+        description: Ventes en Amérique du Nord, en millions d'unités.
+
+      - name: eu_sales
+        description: Ventes en Europe, en millions d'unités.
+
+      - name: jp_sales
+        description: Ventes au Japon, en millions d'unités.
+
+      - name: other_sales
+        description: Ventes dans les autres régions, en millions d'unités.
+
+      - name: global_sales
+        description: Total des ventes mondiales calculé (na + eu + jp + other), en millions d'unités.
+
+      - name: critic_score
+        description: Score Metacritic presse (0–100), issu du CSV vgsales. Peut être NULL.
+
+      - name: critic_count
+        description: Nombre de critiques presse ayant noté le jeu. Peut être NULL.
+
+      - name: user_score
+        description: Note utilisateurs (0.0–10.0), issue du CSV vgsales. Peut être NULL.
+
+      - name: user_count
+        description: Nombre d'utilisateurs ayant noté le jeu. Peut être NULL.
+
+  - name: fct_games_enriched
+    description: >
+      Table de faits enrichie croisant ventes historiques (vgsales) et scores RAWG.
+      Permet l'analyse de corrélation entre popularité joueurs et performance commerciale.
+      INNER JOIN intentionnel : seuls les jeux présents dans les deux sources sont conservés.
+      Filtre release_year <= 2016 : le dataset vgsales ne couvre pas les années suivantes.
+      Grain : une ligne par (jeu, plateforme) présent dans les deux sources.
+    columns:
+      - name: game_platform_id
+        description: Clé surrogate sur (game_name, platform). Clé primaire de la table.
+        tests:
+          - unique
+          - not_null
+
+      - name: game_id
+        description: Clé surrogate sur game_name.
+        tests:
+          - not_null
+
+      - name: game_name
+        description: Nom du jeu (source vgsales).
+        tests:
+          - not_null
+
+      - name: platform_code
+        description: Code court de la plateforme.
+
+      - name: platform_name
+        description: Nom complet de la plateforme.
+
+      - name: manufacturer
+        description: Fabricant de la console.
+
+      - name: release_year
+        description: Année de sortie (≤ 2016 par construction du filtre).
+
+      - name: esrb_rating
+        description: Classification ESRB. Peut être NULL.
+
+      - name: genre_id
+        description: FK vers dim_genre. Peut être NULL si genre absent dans vgsales.
+        tests:
+          - relationships:
+              to: ref('dim_genre')
+              field: genre_id
+
+      - name: publisher_id
+        description: FK vers dim_publisher. Peut être NULL si éditeur absent dans vgsales.
+        tests:
+          - relationships:
+              to: ref('dim_publisher')
+              field: publisher_id
+
+      - name: developer
+        description: Studio de développement. Peut être NULL.
+
+      - name: na_sales
+        description: Ventes Amérique du Nord, en millions d'unités.
+
+      - name: eu_sales
+        description: Ventes Europe, en millions d'unités.
+
+      - name: jp_sales
+        description: Ventes Japon, en millions d'unités.
+
+      - name: other_sales
+        description: Ventes autres régions, en millions d'unités.
+
+      - name: global_sales
+        description: Total des ventes mondiales, en millions d'unités.
+
+      - name: metacritic_score
+        description: Score Metacritic RAWG (0–100). Peut être NULL si absent de l'API.
+
+      - name: user_rating
+        description: Note moyenne utilisateurs RAWG (0.0–5.0).
+
+      - name: ratings_count
+        description: Nombre d'évaluations utilisateurs RAWG.
+
+      - name: average_playtime_hours
+        description: Temps de jeu moyen en heures (source RAWG). NULL si outlier ou non renseigné.
