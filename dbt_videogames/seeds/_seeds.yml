@@ -1,0 +1,25 @@
+version: 2
+
+seeds:
+
+  - name: platform_mapping
+    description: >
+      Table de correspondance entre les codes courts de plateformes (issus du CSV vgsales)
+      et leurs noms complets avec fabricant. Utilisée par dim_platform via LEFT JOIN.
+      Les plateformes absentes de ce seed apparaissent avec platform_name et manufacturer NULL.
+    columns:
+      - name: platform_code
+        description: Code court tel qu'il apparaît dans le CSV vgsales (ex. PS3, X360, Wii).
+        tests:
+          - unique
+          - not_null
+
+      - name: platform_name
+        description: Nom commercial complet de la plateforme (ex. PlayStation 3).
+        tests:
+          - not_null
+
+      - name: manufacturer
+        description: Fabricant de la console (Sony, Microsoft, Nintendo, Sega…).
+        tests:
+          - not_null

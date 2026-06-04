@@ -1,0 +1,55 @@
+version: 2
+
+models:
+
+  - name: dim_genre
+    description: >
+      Dimension des genres vidéoludiques extraite du catalogue vgsales.
+      Sert de table de référence pour filtrer et regrouper les faits par genre.
+    columns:
+      - name: genre_id
+        description: Clé surrogate générée sur genre_name (md5).
+        tests:
+          - unique
+          - not_null
+
+      - name: genre_name
+        description: Nom du genre tel qu'il apparaît dans le CSV vgsales (ex. Action, Sports, RPG).
+        tests:
+          - unique
+          - not_null
+
+  - name: dim_platform
+    description: >
+      Dimension des plateformes enrichie via le seed platform_mapping.
+      Le LEFT JOIN implique que certaines plateformes peu communes peuvent
+      avoir platform_name et manufacturer à NULL si elles sont absentes du seed.
+    columns:
+      - name: platform_code
+        description: Code court de la plateforme tel qu'il apparaît dans vgsales (ex. PS3, X360, Wii).
+        tests:
+          - unique
+          - not_null
+
+      - name: platform_name
+        description: Nom complet de la plateforme (ex. PlayStation 3). Peut être NULL si le code est absent du seed.
+
+      - name: manufacturer
+        description: Fabricant de la console (Sony, Microsoft, Nintendo…). Peut être NULL si le code est absent du seed.
+
+  - name: dim_publisher
+    description: >
+      Dimension des éditeurs de jeux extraite du catalogue vgsales.
+      Sert de table de référence pour regrouper les ventes par éditeur.
+    columns:
+      - name: publisher_id
+        description: Clé surrogate générée sur publisher_name (md5).
+        tests:
+          - unique
+          - not_null
+
+      - name: publisher_name
+        description: Nom de l'éditeur tel qu'il apparaît dans le CSV vgsales (ex. Nintendo, Electronic Arts).
+        tests:
+          - unique
+          - not_null
